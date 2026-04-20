@@ -18,7 +18,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ## Artifacts
 
-- **MoodWeather** (`artifacts/moodweather`) — React + Vite + Tailwind web app at `/`. The app shows a Chinese “心境气象站” homepage with city buttons, a frosted-glass weather card, simulated weather data, weather-based mood advice, and Framer Motion transitions for city/data changes.
+- **MoodWeather** (`artifacts/moodweather`) — React + Vite + Tailwind web app at `/`. The app shows a Chinese “心境气象站” homepage with automatic browser-location city matching, a manual current-city dropdown, a frosted-glass weather card, simulated weather data, weather-based mood advice, and Framer Motion transitions for city/data changes.
 
 ## Key Commands
 

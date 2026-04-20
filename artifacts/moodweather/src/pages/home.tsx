@@ -1,4 +1,5 @@
-import { Sun, Cloud, CloudRain } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, MapPin, Sun, Cloud, CloudRain } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { WeatherData } from "@/hooks/useWeatherData";
@@ -78,7 +79,7 @@ function WeatherCard({
         </div>
 
         {isLoading ? (
-          <div className="py-8 text-sm text-foreground/60">正在读取实时天气...</div>
+          <div className="py-8 text-sm text-foreground/60">正在读取天气...</div>
         ) : error ? (
           <div className="py-8 text-sm leading-relaxed text-foreground/70">{error}</div>
         ) : cityData ? (
@@ -108,7 +109,7 @@ function WeatherCard({
           心境分析
         </h3>
         <p className="text-foreground/70 leading-relaxed text-sm md:text-base">
-          {cityData?.moodText ?? (isLoading ? "正在生成心境分析..." : "配置天气 API Key 后将显示实时心境分析。")}
+          {cityData?.moodText ?? (isLoading ? "正在生成心境分析..." : "选择城市后将显示心境分析。")}
         </p>
 
         {moodAdvice ? (
@@ -127,14 +128,23 @@ export default function Home({
   cityData,
   isLoading,
   error,
+  locationStatus,
 }: {
   currentCity: string;
   setCurrentCity: (city: string) => void;
   cityData: WeatherData | null;
   isLoading: boolean;
   error: string | null;
+  locationStatus: string;
 }) {
+  const [isCityMenuOpen, setIsCityMenuOpen] = useState(false);
   const backgroundClass = getBackgroundClass(cityData?.weather ?? "晴");
+  const otherCities = CITIES.filter((city) => city !== currentCity);
+
+  function handleCitySelect(city: string) {
+    setCurrentCity(city);
+    setIsCityMenuOpen(false);
+  }
 
   return (
     <div className={cn("min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 relative overflow-hidden transition-colors duration-500", backgroundClass)}>
@@ -144,25 +154,52 @@ export default function Home({
       </div>
 
       <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-medium tracking-wide text-foreground/80">心境气象站</h1>
         </div>
 
-        <div className="flex justify-center gap-3 mb-8">
-          {CITIES.map((city) => (
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <div className="relative">
             <button
-              key={city}
-              onClick={() => setCurrentCity(city)}
-              className={cn(
-                "min-h-11 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ease-out active:scale-95",
-                currentCity === city
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-white/50 text-foreground/70 hover:bg-white/80 backdrop-blur-sm shadow-sm"
-              )}
+              type="button"
+              onClick={() => setIsCityMenuOpen((value) => !value)}
+              className="min-h-12 min-w-36 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-300 ease-out active:scale-95 flex items-center justify-center gap-2"
+              aria-expanded={isCityMenuOpen}
             >
-              {city}
+              <MapPin size={16} strokeWidth={1.8} />
+              <span>{currentCity}</span>
+              <ChevronDown
+                size={16}
+                strokeWidth={1.8}
+                className={cn("transition-transform duration-200", isCityMenuOpen ? "rotate-180" : "rotate-0")}
+              />
             </button>
-          ))}
+
+            <AnimatePresence>
+              {isCityMenuOpen ? (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 8, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="absolute left-1/2 top-full z-20 w-36 -translate-x-1/2 overflow-hidden rounded-2xl border border-white/60 bg-white/80 p-1 shadow-lg backdrop-blur-md"
+                >
+                  {otherCities.map((city) => (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => handleCitySelect(city)}
+                      className="min-h-11 w-full rounded-xl px-4 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-primary/10 active:bg-primary/15"
+                    >
+                      {city}
+                    </button>
+                  ))}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+
+          <p className="text-center text-xs leading-relaxed text-foreground/45">{locationStatus}</p>
         </div>
 
         <AnimatePresence mode="wait">
