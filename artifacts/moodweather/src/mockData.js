@@ -2,7 +2,7 @@ export const mockData = {
   北京: {
     temp: 22,
     humidity: 34,
-    pressure: 1012,
+    pressure: 998,
     weather: "晴",
     description: "晴朗",
     moodText: "湿度较低，心情明朗，适合户外活动。",
@@ -17,7 +17,7 @@ export const mockData = {
   },
   深圳: {
     temp: 25,
-    humidity: 62,
+    humidity: 92,
     pressure: 1010,
     weather: "晴",
     description: "晴",

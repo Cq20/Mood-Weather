@@ -13,6 +13,22 @@ type CityData = {
   moodText: string;
 };
 
+function generateMoodAdvice(weatherData: CityData) {
+  if (weatherData.humidity > 90) {
+    return "回南天防躁，注意情绪波动哦~";
+  }
+
+  if (weatherData.weather.includes("雨") || weatherData.weather.includes("阴")) {
+    return "生理节能期，避免过度消耗。";
+  }
+
+  if (weatherData.pressure < 1000) {
+    return "感知风暴，情绪可能更敏感。";
+  }
+
+  return "气象状态较平稳，适合保持当下节奏。";
+}
+
 function getWeatherIcon(weather: string) {
   if (weather === "晴") {
     return Sun;
@@ -41,6 +57,7 @@ function WeatherCard({
   cityData: CityData;
 }) {
   const WeatherIcon = getWeatherIcon(cityData.weather);
+  const moodAdvice = generateMoodAdvice(cityData);
 
   return (
     <div className="rounded-3xl bg-white/40 backdrop-blur-md border border-white/60 shadow-lg overflow-hidden transition-all duration-500 ease-out">
@@ -76,6 +93,11 @@ function WeatherCard({
         <p className="text-foreground/70 leading-relaxed text-sm md:text-base">
           {cityData.moodText}
         </p>
+
+        <div className="mt-5 rounded-2xl bg-white/35 border border-white/50 px-4 py-4">
+          <div className="text-xs font-medium text-primary/70 mb-2">心理映射</div>
+          <p className="text-sm leading-relaxed text-foreground/75">{moodAdvice}</p>
+        </div>
       </div>
     </div>
   );
