@@ -1,19 +1,11 @@
 import { Sun, Cloud, CloudRain } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { mockData } from "@/mockData";
+import type { WeatherData } from "@/hooks/useWeatherData";
 
 const CITIES = ["北京", "上海", "深圳"];
 
-type CityData = {
-  temp: number;
-  humidity: number;
-  pressure: number;
-  weather: string;
-  description: string;
-  moodText: string;
-};
-
-function generateMoodAdvice(weatherData: CityData) {
+function generateMoodAdvice(weatherData: WeatherData) {
   if (weatherData.humidity > 90) {
     return "回南天防躁，注意情绪波动哦~";
   }
@@ -30,11 +22,11 @@ function generateMoodAdvice(weatherData: CityData) {
 }
 
 function getWeatherIcon(weather: string) {
-  if (weather === "晴") {
+  if (weather.includes("晴")) {
     return Sun;
   }
 
-  if (weather === "雨") {
+  if (weather.includes("雨")) {
     return CloudRain;
   }
 
@@ -42,7 +34,7 @@ function getWeatherIcon(weather: string) {
 }
 
 function getBackgroundClass(weather: string) {
-  if (weather === "雨") {
+  if (weather.includes("雨") || weather.includes("阴")) {
     return "bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50";
   }
 
@@ -52,36 +44,61 @@ function getBackgroundClass(weather: string) {
 function WeatherCard({
   currentCity,
   cityData,
+  isLoading,
+  error,
 }: {
   currentCity: string;
-  cityData: CityData;
+  cityData: WeatherData | null;
+  isLoading: boolean;
+  error: string | null;
 }) {
-  const WeatherIcon = getWeatherIcon(cityData.weather);
-  const moodAdvice = generateMoodAdvice(cityData);
+  const WeatherIcon = getWeatherIcon(cityData?.weather ?? "晴");
+  const moodAdvice = cityData ? generateMoodAdvice(cityData) : null;
 
   return (
-    <div className="rounded-3xl bg-white/40 backdrop-blur-md border border-white/60 shadow-lg overflow-hidden transition-all duration-500 ease-out">
-      <div className="p-8 pb-10 flex flex-col items-center text-center">
+    <motion.div
+      key={currentCity}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.32, ease: "easeOut" }}
+      className="rounded-3xl bg-white/40 backdrop-blur-md border border-white/60 shadow-lg overflow-hidden transition-all duration-500 ease-out"
+    >
+      <motion.div
+        key={`${currentCity}-weather-${cityData?.temp ?? "loading"}-${cityData?.weather ?? "empty"}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.35 }}
+        className="p-8 pb-10 flex flex-col items-center text-center"
+      >
         <div className="text-foreground/60 font-medium mb-6 tracking-widest">{currentCity}</div>
 
         <div className="flex items-center justify-center text-primary mb-4 transition-transform duration-500 scale-110">
           <WeatherIcon size={64} strokeWidth={1.5} />
         </div>
 
-        <div className="text-6xl font-light text-foreground/80 mb-2">{cityData.temp}°</div>
-        <div className="text-lg text-foreground/60">{cityData.description}</div>
+        {isLoading ? (
+          <div className="py-8 text-sm text-foreground/60">正在读取实时天气...</div>
+        ) : error ? (
+          <div className="py-8 text-sm leading-relaxed text-foreground/70">{error}</div>
+        ) : cityData ? (
+          <>
+            <div className="text-6xl font-light text-foreground/80 mb-2">{cityData.temp}°</div>
+            <div className="text-lg text-foreground/60">{cityData.description}</div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 w-full">
-          <div className="rounded-2xl bg-white/35 border border-white/50 px-4 py-3">
-            <div className="text-xs text-foreground/45 mb-1">湿度</div>
-            <div className="text-lg font-medium text-foreground/70">{cityData.humidity}%</div>
-          </div>
-          <div className="rounded-2xl bg-white/35 border border-white/50 px-4 py-3">
-            <div className="text-xs text-foreground/45 mb-1">气压</div>
-            <div className="text-lg font-medium text-foreground/70">{cityData.pressure} hPa</div>
-          </div>
-        </div>
-      </div>
+            <div className="mt-6 grid grid-cols-2 gap-3 w-full">
+              <div className="rounded-2xl bg-white/35 border border-white/50 px-4 py-3">
+                <div className="text-xs text-foreground/45 mb-1">湿度</div>
+                <div className="text-lg font-medium text-foreground/70">{cityData.humidity}%</div>
+              </div>
+              <div className="rounded-2xl bg-white/35 border border-white/50 px-4 py-3">
+                <div className="text-xs text-foreground/45 mb-1">气压</div>
+                <div className="text-lg font-medium text-foreground/70">{cityData.pressure} hPa</div>
+              </div>
+            </div>
+          </>
+        ) : null}
+      </motion.div>
 
       <div className="h-px w-full bg-gradient-to-r from-transparent via-white/50 to-transparent" />
 
@@ -91,27 +108,33 @@ function WeatherCard({
           心境分析
         </h3>
         <p className="text-foreground/70 leading-relaxed text-sm md:text-base">
-          {cityData.moodText}
+          {cityData?.moodText ?? (isLoading ? "正在生成心境分析..." : "配置天气 API Key 后将显示实时心境分析。")}
         </p>
 
-        <div className="mt-5 rounded-2xl bg-white/35 border border-white/50 px-4 py-4">
-          <div className="text-xs font-medium text-primary/70 mb-2">心理映射</div>
-          <p className="text-sm leading-relaxed text-foreground/75">{moodAdvice}</p>
-        </div>
+        {moodAdvice ? (
+          <div className="mt-5 rounded-2xl bg-white/35 border border-white/50 px-4 py-4">
+            <p className="text-sm leading-relaxed text-foreground/75">{moodAdvice}</p>
+          </div>
+        ) : null}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export default function Home({
   currentCity,
   setCurrentCity,
+  cityData,
+  isLoading,
+  error,
 }: {
   currentCity: string;
   setCurrentCity: (city: string) => void;
+  cityData: WeatherData | null;
+  isLoading: boolean;
+  error: string | null;
 }) {
-  const cityData = mockData[currentCity] ?? mockData["深圳"];
-  const backgroundClass = getBackgroundClass(cityData.weather);
+  const backgroundClass = getBackgroundClass(cityData?.weather ?? "晴");
 
   return (
     <div className={cn("min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 relative overflow-hidden transition-colors duration-500", backgroundClass)}>
@@ -142,7 +165,14 @@ export default function Home({
           ))}
         </div>
 
-        <WeatherCard currentCity={currentCity} cityData={cityData} />
+        <AnimatePresence mode="wait">
+          <WeatherCard
+            currentCity={currentCity}
+            cityData={cityData}
+            isLoading={isLoading}
+            error={error}
+          />
+        </AnimatePresence>
       </div>
     </div>
   );
