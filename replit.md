@@ -18,7 +18,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ## Artifacts
 
-- **MoodWeather** (`artifacts/moodweather`) — React + Vite + Tailwind web app at `/`. The app shows a Chinese “心境气象站” homepage with city buttons, a frosted-glass weather card, weather-based mood advice, OpenWeatherMap-powered realtime weather via `VITE_WEATHER_API_KEY`, and Framer Motion transitions for city/data changes.
+- **MoodWeather** (`artifacts/moodweather`) — React + Vite + Tailwind web app at `/`. The app shows a Chinese “心境气象站” homepage with city buttons, a frosted-glass weather card, simulated weather data, weather-based mood advice, and Framer Motion transitions for city/data changes.
 
 ## Key Commands
 
@@ -29,9 +29,9 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 - `pnpm --filter @workspace/moodweather run dev` — run MoodWeather locally through its configured service
 
-## MoodWeather Configuration
+## MoodWeather Data
 
-- Development weather API key is read from `artifacts/moodweather/.env.local` as `VITE_WEATHER_API_KEY`.
-- The key is intentionally not committed or hardcoded.
+- Weather data is currently simulated inside `artifacts/moodweather/src/hooks/useWeatherData.ts`.
+- The hook keeps the same loading/data/error shape so it can be switched back to a real API later.
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
