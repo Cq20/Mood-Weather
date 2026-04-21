@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Palette from "@/pages/palette";
 import Shredder from "@/pages/shredder";
 import Bubble from "@/pages/bubble";
+import Journal from "@/pages/journal";
 import { useWeatherData } from "@/hooks/useWeatherData";
 
 const queryClient = new QueryClient();
@@ -85,6 +86,9 @@ function Router({
       </Route>
       <Route path="/bubble">
         <Bubble />
+      </Route>
+      <Route path="/journal">
+        <Journal />
       </Route>
       <Route component={NotFound} />
     </Switch>

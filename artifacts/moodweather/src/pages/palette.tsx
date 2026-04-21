@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowLeft, Eraser, RotateCcw, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { recordEvent } from "@/lib/tracker";
 import type { WeatherData } from "@/hooks/useWeatherData";
 
 type BrushType = "burst" | "diffuse" | "smooth";
@@ -459,6 +460,14 @@ export default function Palette({ cityData }: { cityData: WeatherData | null }) 
       setStats(result);
       setInterpretation(buildInterpretation(result));
       setIsAnalyzing(false);
+      const dominant = result[0];
+      recordEvent({
+        type: "palette",
+        ts: Date.now(),
+        dominantColor: dominant?.hex,
+        dominantLabel: dominant?.label,
+        ratio: dominant?.ratio,
+      });
       window.requestAnimationFrame(() => {
         document
           .getElementById("palette-interpretation")

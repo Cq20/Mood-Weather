@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ChevronDown, MapPin, Sun, Cloud, CloudRain, Palette as PaletteIcon, Wind, Users } from "lucide-react";
+import { ChevronDown, MapPin, Sun, Cloud, CloudRain, Palette as PaletteIcon, Wind, Users, BookHeart } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { WeatherData } from "@/hooks/useWeatherData";
@@ -212,7 +212,7 @@ export default function Home({
           />
         </AnimatePresence>
 
-        <div className="mt-6 grid grid-cols-3 gap-2">
+        <div className="mt-6 grid grid-cols-2 gap-2">
           <Link
             href="/palette"
             className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/60 bg-white/40 px-3 py-3 text-xs font-medium text-foreground/75 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/60 active:scale-[0.97]"
@@ -233,6 +233,13 @@ export default function Home({
           >
             <Users size={20} strokeWidth={1.6} />
             <span>社交气泡</span>
+          </Link>
+          <Link
+            href="/journal"
+            className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/60 bg-white/40 px-3 py-3 text-xs font-medium text-foreground/75 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/60 active:scale-[0.97]"
+          >
+            <BookHeart size={20} strokeWidth={1.6} />
+            <span>心境日记</span>
           </Link>
         </div>
       </div>
