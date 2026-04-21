@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ChevronDown, MapPin, Sun, Cloud, CloudRain } from "lucide-react";
+import { Link } from "wouter";
+import { ChevronDown, MapPin, Sun, Cloud, CloudRain, Palette as PaletteIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { WeatherData } from "@/hooks/useWeatherData";
@@ -210,6 +211,14 @@ export default function Home({
             error={error}
           />
         </AnimatePresence>
+
+        <Link
+          href="/palette"
+          className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/40 px-5 py-3 text-sm font-medium text-foreground/75 shadow-sm backdrop-blur-md transition-all duration-300 ease-out border border-white/60 hover:bg-white/60 active:scale-[0.98]"
+        >
+          <PaletteIcon size={16} strokeWidth={1.8} />
+          <span>进入情绪调色盘</span>
+        </Link>
       </div>
     </div>
   );

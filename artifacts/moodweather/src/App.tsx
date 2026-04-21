@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
+import Palette from "@/pages/palette";
 import { useWeatherData } from "@/hooks/useWeatherData";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,9 @@ function Router({
           error={error}
           locationStatus={locationStatus}
         />
+      </Route>
+      <Route path="/palette">
+        <Palette cityData={cityData} />
       </Route>
       <Route component={NotFound} />
     </Switch>
