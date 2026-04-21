@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ChevronDown, MapPin, Sun, Cloud, CloudRain, Palette as PaletteIcon } from "lucide-react";
+import { ChevronDown, MapPin, Sun, Cloud, CloudRain, Palette as PaletteIcon, Wind, Users } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { WeatherData } from "@/hooks/useWeatherData";
@@ -212,13 +212,29 @@ export default function Home({
           />
         </AnimatePresence>
 
-        <Link
-          href="/palette"
-          className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/40 px-5 py-3 text-sm font-medium text-foreground/75 shadow-sm backdrop-blur-md transition-all duration-300 ease-out border border-white/60 hover:bg-white/60 active:scale-[0.98]"
-        >
-          <PaletteIcon size={16} strokeWidth={1.8} />
-          <span>进入情绪调色盘</span>
-        </Link>
+        <div className="mt-6 grid grid-cols-3 gap-2">
+          <Link
+            href="/palette"
+            className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/60 bg-white/40 px-3 py-3 text-xs font-medium text-foreground/75 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/60 active:scale-[0.97]"
+          >
+            <PaletteIcon size={20} strokeWidth={1.6} />
+            <span>情绪调色盘</span>
+          </Link>
+          <Link
+            href="/shredder"
+            className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/60 bg-white/40 px-3 py-3 text-xs font-medium text-foreground/75 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/60 active:scale-[0.97]"
+          >
+            <Wind size={20} strokeWidth={1.6} />
+            <span>烦恼粉碎机</span>
+          </Link>
+          <Link
+            href="/bubble"
+            className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/60 bg-white/40 px-3 py-3 text-xs font-medium text-foreground/75 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/60 active:scale-[0.97]"
+          >
+            <Users size={20} strokeWidth={1.6} />
+            <span>社交气泡</span>
+          </Link>
+        </div>
       </div>
     </div>
   );

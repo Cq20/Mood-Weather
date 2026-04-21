@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Palette from "@/pages/palette";
+import Shredder from "@/pages/shredder";
+import Bubble from "@/pages/bubble";
 import { useWeatherData } from "@/hooks/useWeatherData";
 
 const queryClient = new QueryClient();
@@ -77,6 +79,12 @@ function Router({
       </Route>
       <Route path="/palette">
         <Palette cityData={cityData} />
+      </Route>
+      <Route path="/shredder">
+        <Shredder />
+      </Route>
+      <Route path="/bubble">
+        <Bubble />
       </Route>
       <Route component={NotFound} />
     </Switch>
