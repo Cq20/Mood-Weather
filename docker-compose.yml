@@ -1,0 +1,26 @@
+# MoodWeather 本地开发数据库
+# 使用方式：docker compose up -d
+# 然后设置环境变量并执行迁移：
+#   export DATABASE_URL=postgres://postgres:postgres@localhost:5432/moodweather
+#   pnpm --filter db migrate
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: moodweather-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: moodweather
+    ports:
+      - "5432:5432"
+    volumes:
+      - moodweather_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d moodweather"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  moodweather_pgdata:

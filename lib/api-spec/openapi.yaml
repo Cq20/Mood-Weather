@@ -1,0 +1,645 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.2.0
+  description: MoodWeather API — 真实天气、用户认证与情绪事件记录
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: 用户认证与会话
+  - name: weather
+    description: 天气查询
+  - name: mood-events
+    description: 情绪事件记录
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status (includes DB reachability)
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
+          description: Database unreachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: authRegister
+      tags: [auth]
+      summary: 注册新用户
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: 注册成功（Set-Cookie 会话）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: 参数校验失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: 邮箱已被注册
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/login:
+    post:
+      operationId: authLogin
+      tags: [auth]
+      summary: 登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: 登录成功（Set-Cookie 会话）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: 参数校验失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 邮箱或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/logout:
+    post:
+      operationId: authLogout
+      tags: [auth]
+      summary: 登出（销毁会话）
+      responses:
+        "200":
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+  /auth/me:
+    get:
+      operationId: authMe
+      tags: [auth]
+      summary: 获取当前用户信息
+      responses:
+        "200":
+          description: 当前用户
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: 未登录或会话过期
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /weather:
+    get:
+      operationId: getWeather
+      tags: [weather]
+      summary: 查询实时天气
+      description: 按城市名或经纬度查询。城市名与坐标二选一。
+      parameters:
+        - name: city
+          in: query
+          required: false
+          description: 城市名（内置城市表，如 北京/上海/深圳）
+          schema:
+            type: string
+        - name: lat
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: lon
+          in: query
+          required: false
+          schema:
+            type: number
+      responses:
+        "200":
+          description: 天气数据
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeatherResponse"
+        "400":
+          description: 缺少参数或坐标不合法
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: 未知城市
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: 天气数据源请求失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /mood-events:
+    get:
+      operationId: listMoodEvents
+      tags: [mood-events]
+      summary: 获取当前用户的情绪事件
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: days
+          in: query
+          required: false
+          description: 回溯天数（1-90，默认 7）
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+      responses:
+        "200":
+          description: 事件列表（按时间倒序）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoodEventList"
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createMoodEvent
+      tags: [mood-events]
+      summary: 记录一次情绪事件
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMoodEventRequest"
+      responses:
+        "201":
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoodEvent"
+        "400":
+          description: 参数校验失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteMoodEvents
+      tags: [mood-events]
+      summary: 清空当前用户的全部情绪事件
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: 清空成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /me/export:
+    get:
+      operationId: exportMyData
+      tags: [auth]
+      summary: 导出当前用户的全部数据（账号 + 情绪事件 + 日记）
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: 完整数据
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataExport"
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /me:
+    delete:
+      operationId: deleteMyAccount
+      tags: [auth]
+      summary: 删除当前用户账号（级联删除全部数据）
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /journal-entries:
+    get:
+      operationId: listJournalEntries
+      tags: [mood-events]
+      summary: 获取当前用户的日记列表（倒序）
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: 日记列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntryList"
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createJournalEntry
+      tags: [mood-events]
+      summary: 新增一条日记
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJournalEntryRequest"
+      responses:
+        "201":
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "400":
+          description: 参数校验失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /journal-entries/{id}:
+    delete:
+      operationId: deleteJournalEntry
+      tags: [mood-events]
+      summary: 删除一条日记（仅本人）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: 日记不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: mood_session
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        db:
+          type: string
+          enum: [ok, unreachable]
+      required:
+        - status
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          nullable: true
+      required:
+        - id
+        - email
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - user
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        displayName:
+          type: string
+          maxLength: 50
+      required:
+        - email
+        - password
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+      required:
+        - error
+    WeatherResponse:
+      type: object
+      properties:
+        city:
+          type: string
+          description: 城市名（按城市查询时返回）
+        temp:
+          type: number
+          description: 温度（°C）
+        humidity:
+          type: number
+          description: 相对湿度（%）
+        pressure:
+          type: number
+          description: 气压（hPa）
+        weather:
+          type: string
+          description: 天气分类（晴/多云/阴/雨/雪/雾/雷暴）
+        description:
+          type: string
+        moodText:
+          type: string
+          description: 心境文案
+      required:
+        - temp
+        - humidity
+        - pressure
+        - weather
+        - description
+        - moodText
+    MoodEventType:
+      type: string
+      enum: [palette, shredder, bubble]
+    CreateMoodEventRequest:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/MoodEventType"
+        occurredAt:
+          type: integer
+          description: 事件发生时间（毫秒时间戳，缺省为服务器时间）
+        payload:
+          type: object
+          additionalProperties: true
+          description: |
+            palette: { dominantColor?, dominantLabel?, ratio? }
+            shredder: { emotion?, length }
+            bubble: { scene, rolesCount }
+      required:
+        - type
+    MoodEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/MoodEventType"
+        ts:
+          type: integer
+          description: 事件发生时间（毫秒时间戳）
+        payload:
+          type: object
+          additionalProperties: true
+      required:
+        - id
+        - type
+        - ts
+    MoodEventList:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/MoodEvent"
+      required:
+        - events
+    MoodEventRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/MoodEventType"
+        occurredAt:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: true
+      required:
+        - id
+        - type
+        - occurredAt
+    JournalEntryRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        moodLabel:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - content
+        - createdAt
+    UserDataExport:
+      type: object
+      properties:
+        exportedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+        moodEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/MoodEventRecord"
+        journalEntries:
+          type: array
+          items:
+            $ref: "#/components/schemas/JournalEntryRecord"
+      required:
+        - exportedAt
+        - user
+        - moodEvents
+        - journalEntries
+    CreateJournalEntryRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        moodLabel:
+          type: string
+          maxLength: 20
+      required:
+        - content
+    JournalEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        moodLabel:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - content
+        - createdAt
+        - updatedAt
+    JournalEntryList:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/JournalEntry"
+      required:
+        - entries
