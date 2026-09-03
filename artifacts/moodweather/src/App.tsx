@@ -131,10 +131,10 @@ function Router({
         <Palette cityData={cityData} />
       </Route>
       <Route path="/shredder">
-        <Shredder />
+        <Shredder cityData={cityData} />
       </Route>
       <Route path="/bubble">
-        <Bubble />
+        <Bubble cityData={cityData} />
       </Route>
       <Route path="/journal">
         <Journal />

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ArrowLeft, BookHeart, Eraser, RotateCcw, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { recordEvent } from "@/lib/tracker";
+import { recordEvent, toWeatherSnapshot } from "@/lib/tracker";
 import { track } from "@/lib/analytics";
 import type { WeatherData } from "@/hooks/useWeatherData";
 
@@ -474,6 +474,7 @@ export default function Palette({ cityData }: { cityData: WeatherData | null }) 
         dominantColor: dominant?.hex,
         dominantLabel: dominant?.label,
         ratio: dominant?.ratio,
+        weather: toWeatherSnapshot(cityData),
       });
       track("module_complete", {
         module: "palette",

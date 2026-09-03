@@ -3,8 +3,9 @@ import { Link } from "wouter";
 import { ArrowLeft, BookHeart, Sparkles, Wind } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { recordEvent } from "@/lib/tracker";
+import { recordEvent, toWeatherSnapshot } from "@/lib/tracker";
 import { track } from "@/lib/analytics";
+import type { WeatherData } from "@/hooks/useWeatherData";
 
 const EMOTIONS: { label: string; hex: string }[] = [
   { label: "失落", hex: "#6B7DB3" },
@@ -128,7 +129,7 @@ function buildPieces(text: string): Piece[] {
   }));
 }
 
-export default function Shredder() {
+export default function Shredder({ cityData }: { cityData: WeatherData | null }) {
   const [emotion, setEmotion] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -157,6 +158,7 @@ export default function Shredder() {
       emotion: emotion ?? undefined,
       length: trimmed.length,
       content: trimmed,
+      weather: toWeatherSnapshot(cityData),
     });
     track("module_complete", {
       module: "shredder",

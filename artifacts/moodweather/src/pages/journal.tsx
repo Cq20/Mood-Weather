@@ -28,6 +28,15 @@ import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { track } from "@/lib/analytics";
 import AuthModal from "@/components/AuthModal";
+import {
+  MoodTrajectoryCard,
+  MonthlySummaryCard,
+  RelationInsight,
+  StreakCard,
+  WeatherMoodCard,
+  WeeklyReportCard,
+} from "@/components/InsightCards";
+import { relationChanges } from "@/lib/insights";
 
 const MAX_JOURNAL_LENGTH = 2000;
 
@@ -241,27 +250,7 @@ export default function Journal() {
     return counts;
   }, [todayEvents]);
 
-  const trend = useMemo(
-    () =>
-      days.map(({ key, label }) => {
-        const entries = eventsByDay[key] ?? [];
-        const counts: Record<TrackerEvent["type"], number> = {
-          palette: 0,
-          shredder: 0,
-          bubble: 0,
-        };
-        for (const event of entries) {
-          counts[event.type] += 1;
-        }
-        return { key, label, counts, total: entries.length };
-      }),
-    [days, eventsByDay],
-  );
-
-  const maxDayTotal = useMemo(
-    () => Math.max(1, ...trend.map((day) => day.total)),
-    [trend],
-  );
+  const relationDeltas = useMemo(() => relationChanges(events), [events]);
 
   const emotionStats = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -356,6 +345,8 @@ export default function Journal() {
           </motion.div>
         ) : null}
 
+        <StreakCard events={events} />
+
         {!user && events.length > 0 ? (
           <motion.div
             initial={{ opacity: 0, y: -6 }}
@@ -447,44 +438,9 @@ export default function Journal() {
           <p className="mt-3 text-xs leading-6 text-foreground/65">{moodSummary}</p>
         </section>
 
-        <section className="rounded-3xl border border-white/60 bg-white/85 p-4 shadow-md backdrop-blur-md">
-          <h3 className="mb-3 text-sm font-medium text-foreground/75">7 天趋势</h3>
-          <div className="space-y-2">
-            {trend.map((day) => (
-              <div key={day.key} className="flex items-center gap-2">
-                <span className="w-10 text-xs text-foreground/55">{day.label}</span>
-                <div className="relative flex h-3 flex-1 overflow-hidden rounded-full bg-foreground/5">
-                  {(Object.keys(TYPE_LABEL) as TrackerEvent["type"][]).map((type) => {
-                    const ratio = day.counts[type] / maxDayTotal;
-                    if (ratio === 0) return null;
-                    return (
-                      <motion.div
-                        key={type}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${ratio * 100}%` }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="h-full"
-                        style={{ backgroundColor: TYPE_COLOR[type] }}
-                      />
-                    );
-                  })}
-                </div>
-                <span className="w-6 text-right text-xs text-foreground/55">{day.total}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex items-center justify-end gap-3 text-[11px] text-foreground/55">
-            {(Object.keys(TYPE_LABEL) as TrackerEvent["type"][]).map((type) => (
-              <span key={type} className="inline-flex items-center gap-1">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{ backgroundColor: TYPE_COLOR[type] }}
-                />
-                {TYPE_LABEL[type]}
-              </span>
-            ))}
-          </div>
-        </section>
+        <WeatherMoodCard events={events} />
+
+        <MoodTrajectoryCard events={events} />
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <section className="rounded-3xl border border-white/60 bg-white/85 p-4 shadow-md backdrop-blur-md">
@@ -546,6 +502,12 @@ export default function Journal() {
             )}
           </section>
         </div>
+
+        <WeeklyReportCard events={events} />
+
+        <RelationInsight changes={relationDeltas} />
+
+        <MonthlySummaryCard events={events} />
 
         <section className="rounded-3xl border border-white/60 bg-white/85 p-4 shadow-md backdrop-blur-md">
           <div className="mb-3 flex items-center justify-between">

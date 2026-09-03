@@ -3,8 +3,10 @@ import { Link } from "wouter";
 import { ArrowLeft, BookHeart, Plus, X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { recordEvent } from "@/lib/tracker";
+import { recordEvent, toWeatherSnapshot, loadEvents } from "@/lib/tracker";
 import { track } from "@/lib/analytics";
+import { relationChanges } from "@/lib/insights";
+import type { WeatherData } from "@/hooks/useWeatherData";
 
 type SceneKey = "family" | "school" | "work" | "custom";
 
@@ -95,7 +97,7 @@ function buildPresetRoles(scene: Scene, width: number, height: number): Role[] {
   });
 }
 
-export default function Bubble() {
+export default function Bubble({ cityData }: { cityData: WeatherData | null }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [scene, setScene] = useState<SceneKey>("family");
@@ -105,6 +107,12 @@ export default function Bubble() {
   const [newRoleName, setNewRoleName] = useState("");
   const [recorded, setRecorded] = useState(false);
   const sceneInitializedRef = useRef<string | null>(null);
+
+  // 完成记录后重新计算（loadEvents 此时已包含刚写入的事件）→ 最近两次气泡的逐角色距离对比
+  const relationSummary = useMemo(
+    () => (recorded ? relationChanges(loadEvents()) : []),
+    [recorded],
+  );
 
   useEffect(() => {
     track("module_enter", { module: "bubble" });
@@ -265,6 +273,7 @@ export default function Bubble() {
       scene: sceneConfig?.label ?? scene,
       rolesCount: roles.length,
       roles: rolesData,
+      weather: toWeatherSnapshot(cityData),
     });
     track("module_complete", { module: "bubble", rolesCount: roles.length });
     setRecorded(true);
@@ -511,10 +520,34 @@ export default function Bubble() {
         {roles.length > 0 ? (
           <div className="rounded-3xl border border-white/40 bg-white/85 p-4 shadow-md backdrop-blur-md">
             {recorded ? (
-              <div className="flex flex-col items-center gap-2 text-center">
+              <div className="flex flex-col items-center gap-3 text-center">
                 <p className="text-sm text-foreground/75">
                   这段关系已记入你的日记，之后还能回来看变化。
                 </p>
+                {relationSummary.length > 0 ? (
+                  <div className="w-full space-y-1.5 rounded-2xl bg-white/55 px-3 py-2">
+                    {relationSummary.slice(0, 2).map((change) => {
+                      const closer = change.delta < 0;
+                      return (
+                        <p
+                          key={change.label}
+                          className="text-xs leading-5 text-foreground/65"
+                        >
+                          你和「{change.label}」的距离
+                          <span
+                            className={
+                              closer
+                                ? "ml-0.5 font-medium text-emerald-600"
+                                : "ml-0.5 font-medium text-amber-600"
+                            }
+                          >
+                            {closer ? "近" : "远"}了 {Math.abs(Math.round(change.percent))}%
+                          </span>
+                        </p>
+                      );
+                    })}
+                  </div>
+                ) : null}
                 <Link
                   href="/journal?fresh=1"
                   className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-foreground/85 px-4 text-xs font-medium text-white transition-all duration-200 active:scale-[0.98]"
